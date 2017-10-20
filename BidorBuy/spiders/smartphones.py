@@ -7,31 +7,65 @@ from scrapy.selector import Selector
 from scrapy.http import Request
 from time import sleep
 
+# List of brands needed
+brands = ['Apple', 'Samsung']
 
+# Starting parameters
 class SmartphonesSpider(scrapy.Spider):
     name = "smartphones"
     allowed_domains = ["www.bidorbuy.co.za"]
     start_urls = ['https://www.bidorbuy.co.za/jsp/category/Winners.jsp']
     driver = webdriver.Chrome('C:/Coding/chromedriver')
 
+    # Going into home page
     def start_requests(self):
         self.driver = webdriver.Chrome('C:/Coding/chromedriver')
         self.driver.get('https://www.bidorbuy.co.za/jsp/category/Winners.jsp')
+
+        # Choosing cellphones filter
         self.driver.find_element_by_link_text("Cell Phones & Accessories").click()
         sleep(5)
         self.driver.find_element_by_link_text("Cell Phones & Smartphones").click()
         sleep(5)
 
-        sel = Selector(text=self.driver.page_source)
+        # Choosing condition filter - secondhand
+        self.driver.find_element_by_link_text ("Secondhand").click ()
+        sleep(5)
 
-        items = sel.xpath('//*[@class="tradelist_title"]/a/@href').extract()
+        #Selecting each brand from brand list
+        for brand in brands:
 
-        for item in items:
-            url = item
-            yield Request(url, callback=self.parse_item)
+            self.driver.find_element_by_link_text(brand).click()
 
+            sel = Selector(text=self.driver.page_source)
+
+            items = sel.xpath('//*[@class="tradelist_title"]/a/@href').extract()
+
+            #Going through all items on page
+            for item in items:
+                url = item
+                yield Request(url, callback=self.parse_item)
+
+            #Pagination
+            while True:
+                try:
+                    next_page = self.driver.find_element_by_link_text('Next »').click()
+                    sleep(3)
+                    self.logger.info ('Sleeping for 3 seconds')
+                    next_page.click()
+
+                except NoSuchElementException:
+                    self.logger.info('No more pages to load.')
+                    break
+
+
+            # Removing brand filter so that the next brand filter can be chosen
+            self.driver.find_element_by_link_text(brand).click()
+
+    # Details of each offering
     def parse_item(self, response):
         title = response.xpath('//*[@class="item_title"]/text()').extract()
         url = response.request.url
         yield {'title': title, 'url': url}
+
 
