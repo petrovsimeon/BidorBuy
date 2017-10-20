@@ -33,5 +33,13 @@ class SmartphonesSpider(scrapy.Spider):
     def parse_item(self, response):
         title = response.xpath('//*[@class="item_title"]/text()').extract()
         url = response.request.url
-        yield {'title': title, 'url': url}
+        product = response.xpath('//*[@class="product_attribute_block"]/text()').extract()
+        items_available = response.xpath('//@property="v:quantity"').extract()
+        date = response.xpath('//*[@class="priceValidUntil"]/@content').extract()
+        seller = response.xpath('//*[@class="seller_header"]/*[@class="strong"]/*[@class="user-summary"]/*[@class="alias"]/a/text()').extract()
+        seller_page = response.xpath('//*[@class="seller_header"]/*[@class="strong"]/*[@class="user-summary"]/*[@class="alias"]/a/@href').extract()
+        description = response.xpath ("//h2/text()")[0].extract()
+
+        yield {'Title': title, 'URL': url, 'Product': product, 'Items Available': items_available,
+               'Date closed': date, 'Seller name': seller, 'Seller page': seller_page, 'Description': description}
 
