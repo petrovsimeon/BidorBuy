@@ -8,17 +8,17 @@ from time import sleep
 from datetime import datetime
 
 # List of brands needed
-brands = ['Apple', 'Samsung']
+types = ['Apple Laptops']
 # Day and hour of data
 datestring = datetime.strftime(datetime.now(), '%Y-%m-%d-%H-%M-%S')
 
 # Starting parameters
 class SmartphonesSpider(Spider):
-    name = "smartphones"
+    name = "laptops"
     allowed_domains = ["www.bidorbuy.co.za"]
     start_urls = ['https://www.bidorbuy.co.za/jsp/category/Winners.jsp']
     driver = webdriver.Chrome('C:/Coding/chromedriver')
-    custom_settings = {'FEED_FORMAT':'csv', 'FEED_URI':'smartphones '+str(datestring)+'.csv'}
+    custom_settings = {'FEED_FORMAT':'csv', 'FEED_URI': 'laptops '+str(datestring)+'.csv'}
 
     # Going into home page
     def start_requests(self):
@@ -26,19 +26,19 @@ class SmartphonesSpider(Spider):
         self.driver.get('https://www.bidorbuy.co.za/jsp/category/Winners.jsp')
 
         # Choosing cellphones filter
-        self.driver.find_element_by_link_text("Cell Phones & Accessories").click()
+        self.driver.find_element_by_link_text("Computers & Networking").click()
         sleep(5)
-        self.driver.find_element_by_link_text("Cell Phones & Smartphones").click()
+        self.driver.find_element_by_link_text("Laptops & Notebooks").click()
         sleep(5)
 
         # Choosing condition filter - secondhand
         self.driver.find_element_by_link_text("Secondhand").click()
         sleep(5)
 
-        #Selecting each brand from brand list
-        for brand in brands:
+        #Selecting apple or other laptops
+        for type in types:
 
-            self.driver.find_element_by_link_text(brand).click()
+            self.driver.find_element_by_link_text(type).click()
             sleep(5)
 
             sel = Selector(text=self.driver.page_source)
@@ -63,8 +63,8 @@ class SmartphonesSpider(Spider):
                     break
 
 
-            # Removing brand filter so that the next brand filter can be chosen
-            self.driver.find_element_by_link_text(brand).click()
+            # Removing Apple Laptops Filters so that other brands can be chosen
+            self.driver.find_element_by_link_text('Laptops & Notebooks').click()
             sleep(5)
 
     # Details of each offering
@@ -81,5 +81,6 @@ class SmartphonesSpider(Spider):
 
         yield {'Title': title, 'URL': url, 'Product': product, 'Items Available': items_available, 'Final Price': price,
                'Date closed': date, 'Seller name': seller, 'Seller page': seller_page, 'Description': description}
+
 
 

@@ -14,11 +14,11 @@ datestring = datetime.strftime(datetime.now(), '%Y-%m-%d-%H-%M-%S')
 
 # Starting parameters
 class SmartphonesSpider(Spider):
-    name = "smartphones"
+    name = "tablets"
     allowed_domains = ["www.bidorbuy.co.za"]
     start_urls = ['https://www.bidorbuy.co.za/jsp/category/Winners.jsp']
     driver = webdriver.Chrome('C:/Coding/chromedriver')
-    custom_settings = {'FEED_FORMAT':'csv', 'FEED_URI':'smartphones '+str(datestring)+'.csv'}
+    custom_settings = {'FEED_FORMAT':'csv', 'FEED_URI':'tablets '+str(datestring)+'.csv'}
 
     # Going into home page
     def start_requests(self):
@@ -26,10 +26,12 @@ class SmartphonesSpider(Spider):
         self.driver.get('https://www.bidorbuy.co.za/jsp/category/Winners.jsp')
 
         # Choosing cellphones filter
-        self.driver.find_element_by_link_text("Cell Phones & Accessories").click()
+        self.driver.find_element_by_link_text("Computers & Networking").click()
         sleep(5)
-        self.driver.find_element_by_link_text("Cell Phones & Smartphones").click()
+        self.driver.find_element_by_link_text("iPads, Tablets & eReaders").click()
         sleep(5)
+        self.driver.find_element_by_link_text ("Devices").click()
+        sleep (5)
 
         # Choosing condition filter - secondhand
         self.driver.find_element_by_link_text("Secondhand").click()
