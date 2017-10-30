@@ -23,7 +23,9 @@ class SmartphonesSpider(Spider):
     # Going into home page
     def start_requests(self):
         self.driver = webdriver.Chrome('C:/Coding/chromedriver')
+        sleep (5)
         self.driver.get('https://www.bidorbuy.co.za/jsp/category/Winners.jsp')
+        sleep (5)
 
         # Choosing cellphones filter
         self.driver.find_element_by_link_text("Computers & Networking").click()
@@ -73,15 +75,16 @@ class SmartphonesSpider(Spider):
     def parse_item(self, response):
         title = response.xpath('//*[@class="item_title"]/text()').extract()
         url = response.request.url
-        product = response.xpath('//*[@class="product_attribute_block"]/text()').extract()
+        product = response.xpath('normalize-space(//*[@class="product_attribute_block"][text()])').extract()
         items_available = response.xpath('//@property="v:quantity"').extract()
         price = response.xpath("//div[@class='float_left']/div[@class='big_price']/span[@class='bigPriceText2']/text()").extract()
+        winning_bid = response.xpath('normalize-space(//p[@class ="item_purchase_history"]/text())').extract()
         date = response.xpath('//*[@class="priceValidUntil"]/@content').extract()
         seller = response.xpath('//*[@class="seller_header"]/*[@class="strong"]/*[@class="user-summary"]/*[@class="alias"]/a/text()').extract()
         seller_page = response.xpath('//*[@class="seller_header"]/*[@class="strong"]/*[@class="user-summary"]/*[@class="alias"]/a/@href').extract()
-        description = response.xpath ("//*[@class='description']//text()").extract()
+        description = response.xpath (".//*[@class='description']//text()").extract()
 
-        yield {'Title': title, 'URL': url, 'Product': product, 'Items Available': items_available, 'Final Price': price,
+        yield {'Title': title, 'URL': url, 'Product': product, 'Items Available': items_available, 'Final Price': price, 'Winning bid': winning_bid,
                'Date closed': date, 'Seller name': seller, 'Seller page': seller_page, 'Description': description}
 
 
