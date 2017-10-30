@@ -17,11 +17,14 @@ class SmartphonesSpider(Spider):
     name = "laptops"
     allowed_domains = ["www.bidorbuy.co.za"]
     start_urls = ['https://www.bidorbuy.co.za/jsp/category/Winners.jsp']
-    driver = webdriver.Chrome('C:/Coding/chromedriver')
     custom_settings = {'FEED_FORMAT':'csv', 'FEED_URI': 'laptops '+str(datestring)+'.csv'}
 
     # Going into home page
     def start_requests(self):
+
+        # List of products
+        products = []
+
         self.driver = webdriver.Chrome('C:/Coding/chromedriver')
         sleep(5)
         self.driver.get('https://www.bidorbuy.co.za/jsp/category/Winners.jsp')
@@ -29,8 +32,6 @@ class SmartphonesSpider(Spider):
 
         # Choosing cellphones filter
         self.driver.find_element_by_link_text("Computers & Networking").click()
-        sleep(5)
-        self.driver.find_element_by_link_text("Laptops & Notebooks").click()
         sleep(5)
 
         # Choosing condition filter - secondhand
@@ -40,34 +41,33 @@ class SmartphonesSpider(Spider):
         #Selecting apple or other laptops
         for type in types:
 
+            self.driver.find_element_by_link_text("Laptops & Notebooks").click()
             self.driver.find_element_by_link_text(type).click()
             sleep(5)
 
-            sel = Selector(text=self.driver.page_source)
-
-            items = sel.xpath('//*[@class="tradelist_title"]/a/@href').extract()
-
-            # Going through all items on page
-            for item in items:
-                url = item
-                yield Request(url, callback=self.parse_item)
-
-            # Pagination
             while True:
                 try:
-                    next_page = self.driver.find_element_by_link_text('Next »').click()
-                    sleep(3)
-                    self.logger.info ('Sleeping for 3 seconds')
+                    sel = Selector(text=self.driver.page_source)
+                    items = sel.xpath('//*[@class="tradelist_title"]/a/@href').extract()
+
+                    # Going through all items on page
+                    for item in items:
+                        products.append(item)
+                        self.logger.info('ITEMS FOUND:' + str(len(products)))
+
+                    # Pagination
+                    next_page = self.driver.find_element_by_link_text('Next »')
+                    self.logger.info('Sleeping for 3 seconds')
                     next_page.click()
+                    sleep(3)
 
                 except NoSuchElementException:
                     self.logger.info('No more pages to load.')
                     break
 
-
-            # Removing Apple Laptops Filters so that other brands can be chosen
-            self.driver.find_element_by_link_text('Laptops & Notebooks').click()
-            sleep(5)
+            # Getting details
+            for product in products:
+                yield Request(product, callback=self.parse_item)
 
     # Details of each offering
     def parse_item(self, response):

@@ -17,15 +17,17 @@ class SmartphonesSpider(Spider):
     name = "smartphones"
     allowed_domains = ["www.bidorbuy.co.za"]
     start_urls = ['https://www.bidorbuy.co.za/jsp/category/Winners.jsp']
-    driver = webdriver.Chrome('C:/Coding/chromedriver')
     custom_settings = {'FEED_FORMAT':'csv', 'FEED_URI':'smartphones '+str(datestring)+'.csv'}
 
     # Going into home page
     def start_requests(self):
+        # List of products
+        products = []
+
         self.driver = webdriver.Chrome('C:/Coding/chromedriver')
-        sleep (5)
+        sleep(5)
         self.driver.get('https://www.bidorbuy.co.za/jsp/category/Winners.jsp')
-        sleep (5)
+        sleep(5)
 
         # Choosing cellphones filter
         self.driver.find_element_by_link_text("Cell Phones & Accessories").click()
@@ -43,22 +45,21 @@ class SmartphonesSpider(Spider):
             self.driver.find_element_by_link_text(brand).click()
             sleep(5)
 
-            sel = Selector(text=self.driver.page_source)
-
-            items = sel.xpath('//*[@class="tradelist_title"]/a/@href').extract()
-
-            # Going through all items on page
-            for item in items:
-                url = item
-                yield Request(url, callback=self.parse_item)
-
-            # Pagination
             while True:
                 try:
-                    next_page = self.driver.find_element_by_link_text('Next »').click()
-                    sleep(3)
+                    sel = Selector(text=self.driver.page_source)
+                    items = sel.xpath('//*[@class="tradelist_title"]/a/@href').extract()
+
+                    # Going through all items on page
+                    for item in items:
+                        products.append(item)
+                        self.logger.info('ITEMS FOUND:' + str(len(products)))
+
+                    # Pagination
+                    next_page = self.driver.find_element_by_link_text('Next »')
                     self.logger.info('Sleeping for 3 seconds')
                     next_page.click()
+                    sleep(3)
 
                 except NoSuchElementException:
                     self.logger.info('No more pages to load.')
@@ -68,6 +69,10 @@ class SmartphonesSpider(Spider):
             # Removing brand filter so that the next brand filter can be chosen
             self.driver.find_element_by_link_text(brand).click()
             sleep(5)
+
+            # Getting details
+            for product in products:
+                yield Request(product, callback=self.parse_item)
 
     # Details of each offering
     def parse_item(self, response):
